@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MealBridge | Feeding Communities</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    body { background-color: #f4f7f4; color: #333; line-height: 1.6; }
+    .navbar { background-color: #2e7d32; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+    .logo { font-size: 1.5rem; font-weight: bold; }
+    .navbar nav a { color: white; text-decoration: none; margin-left: 1.5rem; font-weight: 500; }
+    .navbar nav a:hover { opacity: 0.75; }
+    .hero { background: linear-gradient(135deg, #2e7d32 0%, #66bb6a 100%); color: white; text-align: center; padding: 5rem 2rem; }
+    .hero h1 { font-size: 2.5rem; max-width: 800px; margin: 0 auto 1rem; }
+    .hero p { font-size: 1.2rem; margin-bottom: 2rem; }
+    .btn { background-color: white; color: #2e7d32; padding: 0.8rem 2rem; border-radius: 30px; text-decoration: none; font-weight: bold; display: inline-block; }
+    .donations-section { padding: 4rem 2rem; max-width: 1100px; margin: 0 auto; }
+    .donations-section h2 { color: #2e7d32; font-size: 2rem; text-align: center; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 2rem; }
+    .donation-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+    .donation-card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 5px solid #2e7d32; }
+    .donation-card h3 { color: #2e7d32; font-size: 1.2rem; margin-bottom: 0.5rem; }
+    .amount { font-size: 1rem; color: #333; margin-bottom: 0.75rem; }
+    .status { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
+    .status-received { background-color: #e8f5e9; color: #2e7d32; }
+    .status-pending { background-color: #fff3e0; color: #ef6c00; }
+    .loading { grid-column: 1 / -1; text-align: center; color: #666; padding: 2rem; }
+    .about { background-color: white; padding: 4rem 2rem; text-align: center; }
+    .about h2 { color: #2e7d32; margin-bottom: 1rem; }
+    footer { background-color: #1b5e20; color: white; text-align: center; padding: 1.5rem; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">🍲 MealBridge</div>
+    <nav>
+      <a href="#home">Home</a>
+      <a href="#donations">Donations</a>
+      <a href="#about">About</a>
+    </nav>
+  </header>
+
+  <section class="hero" id="home">
+    <h1>Bridging the Gap Between Donors and Communities</h1>
+    <p>Every donation you make reaches a family in need.</p>
+    <a href="#donations" class="btn">View Donations</a>
+  </section>
+
+  <section class="donations-section" id="donations">
+    <h2>Recent Donations</h2>
+    <p class="subtitle">Live data from our community</p>
+    <div id="donation-list" class="donation-grid">
+      <div class="loading">Loading donations...</div>
+    </div>
+  </section>
+
+  <section class="about" id="about">
+    <h2>About MealBridge</h2>
+    <p>MealBridge is a community-based food scheme that connects donors, volunteers, and beneficiaries.</p>
+  </section>
+
+  <footer>
+    <p>© 2026 MealBridge | Contact: info@mealbridge.org</p>
+  </footer>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    
+    const supabase = createClient(
+      'https://onjlnwbhwhfmjkizlaiv.supabase.co',
+      'sb_publishable_PzkYbTjxnMyPPeImKAJLbw_MFgGLbMq'
+    );
+
+    async function loadDonations() {
+      const { data, error } = await supabase.from('donations').select('*');
+      const list = document.getElementById('donation-list');
+
+      if (error) {
+        list.innerHTML = '<div class="loading">Error: ' + error.message + '</div>';
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        list.innerHTML = '<div class="loading">No donations found.</div>';
+        return;
+      }
+
+      list.innerHTML = data.map(d => `
+        <div class="donation-card">
+          <h3>${d.donor_name}</h3>
+          <div class="amount">${d.item || 'R' + d.amount}</div>
+          <span class="status ${d.status === 'RECEIVED' ? 'status-received' : 'status-pending'}">
+            ${d.status}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    loadDonations();
+  </script>
+</body>
+</html>
