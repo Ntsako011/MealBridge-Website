@@ -65,36 +65,50 @@
   </footer>
 
   <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-    
-    const supabase = createClient(
-      'https://onjlnwbhwhfmjkizlaiv.supabase.co',
-      'sb_publishable_PzkYbTjxnMyPPeImKAJLbw_MFgGLbMq'
-    );
+    // --- CONFIGURATION ---
+    const SUPABASE_URL = 'https://onjlnwbhwhfmjkizlaiv.supabase.co/rest/v1/donations?select=*';
+    const API_KEY = 'sb_publishable_PzkYbTjxnMyPPeImKAJLbw_MFgGLbMq';
 
+    // --- LOAD DONATIONS VIA CORS PROXY ---
     async function loadDonations() {
-      const { data, error } = await supabase.from('donations').select('*');
       const list = document.getElementById('donation-list');
+      const proxyUrl = 'https://corsproxy.io/?';
 
-      if (error) {
+      try {
+        const response = await fetch(proxyUrl + encodeURIComponent(SUPABASE_URL), {
+          method: 'GET',
+          headers: {
+            'apikey': API_KEY,
+            'Authorization': 'Bearer ' + API_KEY,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('HTTP error! status: ' + response.status);
+        }
+
+        const data = await response.json();
+
+        if (!data || data.length === 0) {
+          list.innerHTML = '<div class="loading">No donations found.</div>';
+          return;
+        }
+
+        list.innerHTML = data.map(d => `
+          <div class="donation-card">
+            <h3>${d.donor_name}</h3>
+            <div class="amount">${d.item || 'R' + d.amount}</div>
+            <span class="status ${d.status === 'RECEIVED' ? 'status-received' : 'status-pending'}">
+              ${d.status}
+            </span>
+          </div>
+        `).join('');
+
+      } catch (error) {
+        console.error('Fetch error:', error);
         list.innerHTML = '<div class="loading">Error: ' + error.message + '</div>';
-        return;
       }
-
-      if (!data || data.length === 0) {
-        list.innerHTML = '<div class="loading">No donations found.</div>';
-        return;
-      }
-
-      list.innerHTML = data.map(d => `
-        <div class="donation-card">
-          <h3>${d.donor_name}</h3>
-          <div class="amount">${d.item || 'R' + d.amount}</div>
-          <span class="status ${d.status === 'RECEIVED' ? 'status-received' : 'status-pending'}">
-            ${d.status}
-          </span>
-        </div>
-      `).join('');
     }
 
     loadDonations();
