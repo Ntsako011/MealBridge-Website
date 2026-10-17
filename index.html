@@ -7,9 +7,10 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
     body { background-color: #f4f7f4; color: #333; line-height: 1.6; }
-    .navbar { background-color: #2e7d32; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    .navbar { background-color: #2e7d32; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
     .logo { font-size: 1.5rem; font-weight: bold; }
     .navbar nav a { color: white; text-decoration: none; margin-left: 1.5rem; font-weight: 500; }
+    .navbar nav a:hover { opacity: 0.75; }
     .hero { background: linear-gradient(135deg, #2e7d32 0%, #66bb6a 100%); color: white; text-align: center; padding: 5rem 2rem; }
     .hero h1 { font-size: 2.5rem; max-width: 800px; margin: 0 auto 1rem; }
     .hero p { font-size: 1.2rem; margin-bottom: 2rem; }
@@ -69,9 +70,12 @@
       const supabaseUrl = 'https://onjlnwbhwhfmjkizlaiv.supabase.co/rest/v1/donations?select=*';
       const apiKey = 'sb_publishable_PzkYbTjxnMyPPeImKAJLbw_MFgGLbMq';
       const proxy = 'https://api.allorigins.win/raw?url=';
+      
+      // Cache buster forces the proxy to get fresh data
+      const cacheBuster = '&t=' + new Date().getTime();
 
       try {
-        const response = await fetch(proxy + encodeURIComponent(supabaseUrl), {
+        const response = await fetch(proxy + encodeURIComponent(supabaseUrl) + cacheBuster, {
           headers: {
             'apikey': apiKey,
             'Authorization': 'Bearer ' + apiKey
