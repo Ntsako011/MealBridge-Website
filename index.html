@@ -165,32 +165,7 @@ textarea.inp{resize:vertical;}select.inp{cursor:pointer;}
 </style>
 </head>
 <body>
-<div class="modal-bg" id="replyModal">
-  <div class="modal">
-    <h3>Reply to Message</h3>
-    <div id="modalMsgText" style="background:#f0f7f1;border-radius:8px;padding:9px;font-size:12px;color:#333;margin-bottom:9px;"></div>
-    <textarea class="inp" id="modalReplyText" rows="3" placeholder="Type your reply..."></textarea>
-    <div class="modal-actions">
-      <button class="btn btn-green btn-sm" style="width:auto;flex:1;" onclick="sendModalReply()">SEND REPLY</button>
-      <button class="btn btn-sm" style="width:auto;background:#eee;color:#333;" onclick="closeModal()">Cancel</button>
-    </div>
-  </div>
-</div>
-<div class="modal-bg" id="taskModal">
-  <div class="modal">
-    <h3>Assign Task</h3>
-    <div id="taskModalName" style="font-weight:700;margin-bottom:9px;color:#1a4a2e;"></div>
-    <select class="inp" id="taskSelect">
-      <option value="">Choose a task...</option>
-      <option>Food packing</option><option>Delivery driver</option><option>Kitchen prep</option>
-      <option>Community outreach</option><option>Administration</option><option>Fundraising</option>
-    </select>
-    <div class="modal-actions">
-      <button class="btn btn-green btn-sm" style="width:auto;flex:1;" onclick="confirmTaskAssign()">ASSIGN</button>
-      <button class="btn btn-sm" style="width:auto;background:#eee;color:#333;" onclick="closeModal()">Cancel</button>
-    </div>
-  </div>
-</div>
+<!-- ... (Your existing Modals for Reply and Task) ... -->
 
 <div class="app" id="app">
   <nav class="nav" id="mainNav" style="display:none;">
@@ -202,101 +177,18 @@ textarea.inp{resize:vertical;}select.inp{cursor:pointer;}
 
 <script>
 // ── STATE ──────────────────────────────────────────────────────────────────
+// (Your existing state variables: USER_PAGES, activeUser, users, etc.)
 const USER_PAGES  = ['Home','Requests','Donate','Volunteer','Gallery','Blog','Schedule','Contact'];
 const ADMIN_PAGES = ['Admin'];
-
 let currentPage = 'login';   
 let activeUser  = null;      
-
-const DEMO_ACCOUNTS = [
-  { email:'admin@mealbridge.org', password:'admin123', name:'Rose Ngubeni',  role:'admin' },
-  { email:'user@mealbridge.org',  password:'user123',  name:'Bongani Dube',  role:'user'  },
-];
-
-let chatHistory = [];
-let notifications = [
-  {id:1,msg:'Food scheme this Saturday 9am — Pretoria North',date:'25 May 2026',read:false},
-  {id:2,msg:'New volunteer opportunity — June 3rd',          date:'24 May 2026',read:false},
-  {id:3,msg:'Donation of R100 received. Thank you!',         date:'20 May 2026',read:true}
-];
-let foodRequests = [
-  {id:1,name:'Sarah Dlamini', people:4,details:'Family of 4, no income',     status:'Pending', date:'25 May 2026'},
-  {id:2,name:'John Mokoena',  people:2,details:'Elderly couple, mobility issues',status:'Approved',date:'23 May 2026'},
-  {id:3,name:'Thandi Zulu',   people:6,details:'Single mother, 5 children',  status:'Delivered',date:'20 May 2026'}
-];
-let users = [
-  {id:1,name:'Rose Ngubeni', role:'admin',     joined:'Mar 2024',task:'Management',   email:'rose@mb.org'},
-  {id:2,name:'Jack Collins', role:'volunteer', joined:'Jan 2025',task:'Food packing', email:'jack@mb.org'},
-  {id:3,name:'Tim Mayabe',   role:'volunteer', joined:'Feb 2026',task:'Delivery driver',email:'tim@mb.org'}
-];
-let donations = [
-  {id:1,name:'Anon',      type:'Money',amount:'R250',     date:'24 May 2026',status:'Confirmed'},
-  {id:2,name:'Mr Khumalo',type:'Goods',amount:'30kg Rice',date:'22 May 2026',status:'Delivered'},
-  {id:3,name:'Anon',      type:'Money',amount:'R500',     date:'20 May 2026',status:'Confirmed'}
-];
-let messages = [
-  {id:1,from:'Bongani Sithole',email:'b@email.com',msg:'When is the next food collection?',date:'24 May 2026',replied:false,reply:''},
-  {id:2,from:'Lerato Molefe',  email:'l@email.com',msg:'I want to donate 20kg rice.',      date:'23 May 2026',replied:true, reply:'Please bring to 245 Pretoria Street Mon–Fri 8am–4pm!'}
-];
-let posts = [
-  {id:1,title:'Our biggest food drive yet!',    body:'Last Saturday we served over 400 meals. Thank you to every volunteer!',   date:'20 May 2026'},
-  {id:2,title:'New kitchen facility open',       body:'Our upgraded kitchen is fully operational — three times the capacity!',     date:'10 May 2026'}
-];
-let events = [
-  {id:1,date:'2026-05-31',label:'Monthly Food Drive — Pretoria North'},
-  {id:2,date:'2026-06-07',label:'Volunteer Training Day'},
-  {id:3,date:'2026-06-14',label:'Food Parcel Distribution'},
-  {id:4,date:'2026-06-21',label:'Community Outreach Day'}
-];
-let gallery = [
-  {label:'Community Meal',     img:'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=600&q=80'},
-  {label:'Food Distribution',  img:'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=600&q=80'},
-  {label:'Volunteer Day',      img:'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=600&q=80'},
-  {label:'Kitchen Prep',       img:'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80'},
-  {label:'Community Outreach', img:'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=600&q=80'},
-  {label:'Food Parcels',       img:'https://images.unsplash.com/photo-1609501676725-7186f017a4b7?w=600&q=80'},
-  {label:'Serving Families',   img:'https://images.unsplash.com/photo-1535219851253-3c76c3b78ee6?w=600&q=80'},
-  {label:'Thanksgiving Drive', img:'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&q=80'}
-];
-let uid = 30;
-let replyTarget = null;
-let taskTarget  = null;
-let selectedAmt = 100;
-let loginRole   = 'user'; 
+// ... (Keep all your DEMO_ACCOUNTS, notifications, foodRequests, users, donations arrays here)
+// Make sure the `donations` array has your 10 preset records!
 
 // ── HELPERS ────────────────────────────────────────────────────────────────
-function nid(){ return ++uid; }
-function unread(){ return notifications.filter(n=>!n.read).length; }
 function isAdmin(){ return activeUser && activeUser.role === 'admin'; }
 function sbadge(s){ const m={Pending:'b-orange',Approved:'b-blue',Delivered:'b-green',Rejected:'b-red','Pending Pickup':'b-orange',Confirmed:'b-green'};return`<span class="badge ${m[s]||'b-gray'}">${s}</span>`; }
-function showToast(id,msg){ const el=document.getElementById(id);if(!el)return;if(msg)el.textContent=msg;el.className='toast show';setTimeout(()=>el.classList.remove('show'),3200); }
-function closeModal(){ document.querySelectorAll('.modal-bg').forEach(m=>m.classList.remove('open')); }
-function notify(msg){ notifications.unshift({id:nid(),msg,date:'26 May 2026',read:false}); }
-
-// ── NAV ───────────────────────────────────────────────────────────────────
-function renderNav(){
-  if(!activeUser){ document.getElementById('mainNav').style.display='none'; return; }
-  document.getElementById('mainNav').style.display='flex';
-  const pages = isAdmin() ? [...USER_PAGES,...ADMIN_PAGES] : USER_PAGES;
-  const u = unread();
-  document.getElementById('navLinks').innerHTML =
-    pages.map(p=>`<button class="nav-btn${p===currentPage?' active':''}" onclick="goTo('${p}')">${p}${p==='Home'&&u?'<span class="notif-pip"></span>':''}</button>`).join('')
-    + `<div class="user-chip"><div class="user-avatar">${activeUser.name[0]}</div><span>${activeUser.name} <span style="opacity:.7;">(${activeUser.role})</span></span></div>`
-    + `<button class="logout-btn" onclick="doLogout()">Logout</button>`;
-}
-
-function goTo(p){
-  if(p==='Admin' && !isAdmin()){
-    currentPage='Home'; renderNav(); renderPage(); return;
-  }
-  currentPage=p; renderNav(); renderPage();
-}
-
-function doLogout(){
-  activeUser=null; chatHistory=[];
-  document.getElementById('mainNav').style.display='none';
-  currentPage='login'; renderPage();
-}
+// ... (Keep your other helper functions)
 
 // ── ROUTING ───────────────────────────────────────────────────────────────
 function renderPage(){
@@ -304,34 +196,24 @@ function renderPage(){
     login:    renderLogin,
     signup:   renderSignup,
     Home:     renderHome,
-    Requests: renderRequests,
-    Donate:   renderDonate,
-    Volunteer:renderVolunteer,
-    Gallery:  renderGallery,
-    Blog:     renderBlog,
-    Schedule: renderSchedule,
-    Contact:  renderContact,
-    Admin:    renderAdmin,
+    // ... other pages
   };
   document.getElementById('page').innerHTML = (map[currentPage]||renderHome)();
   
   if(currentPage==='Home'){
+    // THIS IS THE CRITICAL PART: Trigger the fetch when the home page loads
     loadLiveSupabaseDonations();
-    const inp=document.getElementById('chatIn');
-    if(inp) inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey) sendChat(); });
-    const msgs=document.getElementById('chatMsgs');
-    if(msgs) msgs.scrollTop=msgs.scrollHeight;
   }
 }
 
-// ── LIVE SUPABASE FETCH ───────────────────────────────────────────────────
+// ── SUPABASE FETCH FUNCTION ───────────────────────────────────────────────
 async function loadLiveSupabaseDonations() {
     const container = document.getElementById('live-donations');
     if(!container) return;
     
     // YOUR NEW SUPABASE CREDENTIALS
     const SUPABASE_URL = 'https://zylrxineiyklgdeqtuv.supabase.co/rest/v1/donations?select=*';
-    const API_KEY = 'sb_publishable_p1ExCQhDygPfiFxJtAv4Q_mhwor_'; // Add rest of your key here
+    const API_KEY = 'sb_publishable_p1ExCQhDygPfiFxJtAv4Q_mhwor_'; // Make sure you paste the FULL key
     
     const proxyUrl = 'https://api.allorigins.win/raw?url=';
 
@@ -350,11 +232,14 @@ async function loadLiveSupabaseDonations() {
           return;
         }
 
+        // Render the 10 donations into the grid
         container.innerHTML = data.map(d => `
-            <div style="background:#fff;border-left:4px solid #1a4a2e;padding:12px;border-radius:8px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                <div style="font-weight:700;color:#0f2d1c;">${d.donor_name}</div>
-                <div style="font-size:13px;color:#555;">${d.item || 'R' + d.amount}</div>
-                <div style="margin-top:6px;"><span class="badge ${d.status === 'RECEIVED' || d.status === 'Approved' ? 'b-green' : 'b-orange'}">${d.status}</span></div>
+            <div class="donation-card">
+              <h3>${d.donor_name}</h3>
+              <div class="amount">${d.item || 'R' + d.amount}</div>
+              <span class="badge ${d.status === 'RECEIVED' || d.status === 'Approved' ? 'b-green' : 'b-orange'}">
+                ${d.status}
+              </span>
             </div>
         `).join('');
 
@@ -364,294 +249,28 @@ async function loadLiveSupabaseDonations() {
     }
 }
 
-// ── LOGIN & SIGNUP ────────────────────────────────────────────────────────
-function renderLogin(){
-  const isAdminTab = loginRole==='admin';
-  return`
-  <div class="login-page">
-    <div class="login-card">
-      <div class="login-logo">
-        <div class="login-logo-icon">🍲</div>
-        <h1>MealBridge</h1>
-        <p>Feeding Pretoria, one meal at a time</p>
-      </div>
-      <div class="role-toggle">
-        <button class="role-btn${!isAdminTab?' active-user':''}" onclick="setLoginRole('user')">
-          <span class="role-icon">👤</span><span class="role-label">Login as User</span>
-        </button>
-        <button class="role-btn${isAdminTab?' active-admin':''}" onclick="setLoginRole('admin')">
-          <span class="role-icon">🔐</span><span class="role-label">Login as Admin</span>
-        </button>
-      </div>
-      <div class="role-indicator ${isAdminTab?'admin-mode':'user-mode'}">
-        ${isAdminTab ? '🔐 Admin Login — restricted access' : '👤 User Login — donor, volunteer, or beneficiary'}
-      </div>
-      <input class="inp" id="lEmail" placeholder="Email address" type="email"/>
-      <input class="inp" id="lPass"  placeholder="Password" type="password"/>
-      <button class="btn-login ${isAdminTab?'admin-btn':'user-btn'}" onclick="doLogin()">
-        ${isAdminTab?'🔐 LOGIN AS ADMIN':'LOGIN'}
-      </button>
-      <div class="toast" id="lToast"></div>
-      <div class="err"   id="lErr"></div>
-      <div class="login-divider">or</div>
-      <div class="signup-link">Don't have an account? <a onclick="currentPage='signup';renderPage();">Create one here</a></div>
-    </div>
-  </div>`;
-}
-
-function setLoginRole(role){ loginRole = role; renderPage(); }
-
-function doLogin(){
-  const email = document.getElementById('lEmail').value.trim().toLowerCase();
-  const pass  = document.getElementById('lPass').value.trim();
-  const err   = document.getElementById('lErr');
-  if(!email||!pass){ err.textContent='Please fill in email and password.'; return; }
-  err.textContent='';
-  const account = DEMO_ACCOUNTS.find(a=>a.email===email && a.password===pass);
-  if(!account){
-    const reg = users.find(u=>u.email===email);
-    if(reg && pass.length>=4){
-      if(loginRole==='admin' && reg.role!=='admin'){ err.textContent='This account does not have admin access.'; return; }
-      activeUser = {name:reg.name, role:reg.role, email:reg.email};
-    } else { err.textContent='Incorrect email or password.'; return; }
-  } else {
-    if(loginRole==='admin' && account.role!=='admin'){ err.textContent='This account does not have admin access.'; return; }
-    activeUser = {name:account.name, role:account.role, email:account.email};
-  }
-  showToast('lToast', `Welcome back, ${activeUser.name}! 👋`);
-  setTimeout(()=>{ currentPage='Home'; renderNav(); renderPage(); }, 1000);
-}
-
-function renderSignup(){
-  return`
-  <div class="signup-page">
-    <div class="signup-card">
-      <div style="text-align:center;margin-bottom:18px;">
-        <div style="font-size:36px;">🌱</div>
-        <h2 style="font-family:'Lora',serif;font-size:20px;color:#0f2d1c;margin-top:6px;">Create an Account</h2>
-      </div>
-      <input class="inp" id="sName"  placeholder="Full Name"/>
-      <input class="inp" id="sEmail" placeholder="Email Address" type="email"/>
-      <input class="inp" id="sPass"  placeholder="Password (min 4 characters)" type="password"/>
-      <select class="inp" id="sRole">
-        <option value="">Register as...</option>
-        <option value="user">Beneficiary (Food Recipient)</option>
-        <option value="donor">Donor</option>
-        <option value="volunteer">Volunteer</option>
-      </select>
-      <button class="btn btn-green" onclick="doSignup()">CREATE ACCOUNT</button>
-      <div class="toast" id="sToast"></div>
-      <div class="err"   id="sErr"></div>
-      <div style="text-align:center;font-size:12px;color:#666;margin-top:12px;">
-        Already have an account? <a onclick="currentPage='login';renderPage();" style="color:#1a4a2e;font-weight:700;cursor:pointer;text-decoration:underline;">Login here</a>
-      </div>
-    </div>
-  </div>`;
-}
-
-function doSignup(){
-  const name  = document.getElementById('sName').value.trim();
-  const email = document.getElementById('sEmail').value.trim().toLowerCase();
-  const pass  = document.getElementById('sPass').value.trim();
-  const role  = document.getElementById('sRole').value;
-  const err   = document.getElementById('sErr');
-  if(!name||!email||!pass||!role){ err.textContent='Please fill in all fields.'; return; }
-  if(pass.length<4){ err.textContent='Password must be at least 4 characters.'; return; }
-  if(users.find(u=>u.email===email)){ err.textContent='An account with this email already exists.'; return; }
-  err.textContent='';
-  users.push({id:nid(),name,role,joined:'May 2026',task:'Unassigned',email});
-  activeUser = {name,role,email};
-  notify(`New ${role} registered: ${name}`);
-  showToast('sToast',`Account created! Welcome, ${name}! 🎉`);
-  setTimeout(()=>{ currentPage='Home'; renderNav(); renderPage(); }, 1100);
-}
-
-// ── HOME PAGE (WITH LIVE SUPABASE FETCH) ──────────────────────────────────
+// ── HOME PAGE ─────────────────────────────────────────────────────────────
 function renderHome(){
-  const notifRows = notifications.slice(0,4).map(n=>`
-    <div class="notif-row">
-      <div class="notif-dot" style="background:${n.read?'#4a6a4a':'#f4821f'};"></div>
-      <div><div style="font-size:12px;color:#c8e6c9;">${n.msg}</div><div style="font-size:10px;color:#6a9a6a;margin-top:1px;">${n.date}</div></div>
-    </div>`).join('');
-  const chatMsgs = chatHistory.map(m=>`<div class="msg ${m.role==='user'?'user':'bot'}">${m.content.replace(/\n/g,'<br>')}</div>`).join('');
-  
-  // Preset Donations HTML
-  const presetDonationsHTML = donations.map(d=>`
-    <div style="background:#f9fbf9;border-left:4px solid #2e7d32;padding:12px;border-radius:8px;margin-bottom:10px;">
-      <div style="font-weight:700;color:#2e7d32;">${d.name}</div>
-      <div style="font-size:13px;color:#333;">${d.amount}</div>
-      <div style="margin-top:6px;"><span class="badge ${d.status==='Confirmed'?'b-green':'b-orange'}">${d.status}</span></div>
-    </div>`).join('');
-
+  // ... (Keep your hero, notifications, etc.)
   return`
-  <div class="hero">
-    <div class="hero-tag">📍 PRETORIA, SOUTH AFRICA</div>
-    <h1>Fighting hunger,<br>one meal at a <span>time.</span></h1>
-    <p>MealBridge is a non-profit food scheme dedicated to feeding hungry and vulnerable families across Pretoria. Hot meals, food parcels, and community support — every single day.</p>
-    <div class="hero-btns">
-      <button class="btn-hp" onclick="goTo('Donate')">💚 Donate Now</button>
-      <button class="btn-ho" onclick="goTo('Requests')">🍽️ Request Food</button>
-    </div>
-    <div class="hero-stats">
-      <div class="hero-stat"><div class="hero-stat-n">847+</div><div class="hero-stat-l">Meals Served</div></div>
-      <div class="hero-stat"><div class="hero-stat-n">${users.filter(u=>u.role==='volunteer').length}+</div><div class="hero-stat-l">Volunteers</div></div>
-      <div class="hero-stat"><div class="hero-stat-n">${foodRequests.length}+</div><div class="hero-stat-l">Families Helped</div></div>
-    </div>
-  </div>
+  <div class="hero">...</div>
+  <div class="impact">...</div>
+  <div class="do-section">...</div>
 
-  ${isAdmin() 
-    ? `<div class="impact"><p>🔔 <b>${foodRequests.filter(r=>r.status==='Pending').length}</b> food requests awaiting approval — <a onclick="goTo('Admin')">Review in Admin</a></p></div>`
-    : `<div class="impact"><p>🔥 Every rand counts. <a onclick="goTo('Donate')">Donate today</a> and help us serve more families.</p></div>`}
-
-  <div class="do-section">
-    <div class="s-lbl">WHAT WE DO</div>
-    <div class="s-ttl">How we serve the community</div>
-    <div class="do-grid">
-      <div class="do-card"><div class="do-card-icon">🍲</div><h4>Hot Meals</h4><p>Warm meals served 7 days a week from our Pretoria kitchen.</p></div>
-      <div class="do-card"><div class="do-card-icon">📦</div><h4>Food Parcels</h4><p>Monthly parcels delivered to registered families in need.</p></div>
-      <div class="do-card"><div class="do-card-icon">🏘️</div><h4>Community Outreach</h4><p>We go door-to-door in vulnerable areas to find those most at risk.</p></div>
-      <div class="do-card"><div class="do-card-icon">📋</div><h4>Food Requests</h4><p>Families can submit a request and receive assistance within 48 hours.</p></div>
-    </div>
-  </div>
-
-  <!-- PRESET DONATIONS -->
+  <!-- THIS IS THE NEW SECTION -->
   <div class="help-section" style="background:#fff;">
-    <div class="s-lbl">OUR IMPACT</div>
-    <div class="s-ttl">Preset Recent Donations</div>
-    <div style="max-width:500px;margin:0 auto;">
-      ${presetDonationsHTML}
-    </div>
-  </div>
-
-  <!-- LIVE SUPABASE DONATIONS -->
-  <div class="help-section">
     <div class="s-lbl">LIVE DATABASE</div>
     <div class="s-ttl">Live Donations from Supabase</div>
-    <div id="live-donations" style="max-width:500px;margin:0 auto;">
-      <div style="color:#666;font-size:13px;">Loading live data...</div>
+    <!-- The loadLiveSupabaseDonations() function will fill this grid -->
+    <div id="live-donations" class="grid-3" style="max-width:800px;margin:0 auto;">
+      <div class="loading">Loading live data...</div>
     </div>
   </div>
-
-  <!-- CHAT -->
-  <div class="chat-section">
-    <div class="chat-wrap">
-      <div class="g2" style="gap:14px;">
-        <div>
-          <div class="chat-hdr"><div class="chat-av">🤖</div><div class="chat-hdr-t"><h4>MealBridge Assistant</h4><p>AI-powered · Ask anything</p></div></div>
-          <div class="chat-box">
-            <div class="chat-msgs" id="chatMsgs">${!chatHistory.length?'<div class="msg bot">Hi '+activeUser.name.split(' ')[0]+'! 👋 Ask me about food requests, donations, or volunteering.</div>':''}${chatMsgs}</div>
-            <div class="chat-row"><input class="chat-inp" id="chatIn" placeholder="Ask anything..."/><button class="chat-send" id="chatBtn" onclick="sendChat()">Send</button></div>
-          </div>
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:.5px;margin-bottom:6px;">NOTIFICATIONS</div>
-          <div class="notif-strip">${notifRows}</div>
-        </div>
-      </div>
-    </div>
-  </div>`;
+  
+  <div class="chat-section">...</div>`;
 }
 
-// ── LIVE SUPABASE FETCH ───────────────────────────────────────────────────
-async function loadLiveSupabaseDonations() {
-    const container = document.getElementById('live-donations');
-    if(!container) return;
-    
-    // YOUR NEW SUPABASE CREDENTIALS
-    const SUPABASE_URL = 'https://zylrxineiyklgdeqtuv.supabase.co/rest/v1/donations?select=*';
-    const API_KEY = 'sb_publishable_p1ExCQhDygPfiFxJtAv4Q_mhwor_'; // Add rest of your key here
-    
-    const proxyUrl = 'https://api.allorigins.win/raw?url=';
-
-    try {
-        const response = await fetch(proxyUrl + encodeURIComponent(SUPABASE_URL), {
-          headers: {
-            'apikey': API_KEY,
-            'Authorization': 'Bearer ' + API_KEY,
-            'Content-Type': 'application/json'
-          }
-        });
-        const data = await response.json();
-
-        if (!data || data.length === 0) {
-          container.innerHTML = '<div style="color:#666;font-size:13px;">No live database donations found.</div>';
-          return;
-        }
-
-        container.innerHTML = data.map(d => `
-            <div style="background:#fff;border-left:4px solid #1a4a2e;padding:10px;border-radius:6px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                <div style="font-weight:700;color:#0f2d1c;">${d.donor_name}</div>
-                <div style="font-size:13px;color:#555;">${d.item || 'R' + d.amount}</div>
-                <div style="margin-top:4px;"><span class="badge ${d.status === 'RECEIVED' || d.status === 'Approved' ? 'b-green' : 'b-orange'}">${d.status}</span></div>
-            </div>
-        `).join('');
-
-    } catch (error) {
-        console.error(error);
-        container.innerHTML = '<div style="color:red;font-size:12px;">Error loading live data.</div>';
-    }
-}
-
-// ── OTHER PAGES (REQUESTS, DONATE, VOLUNTEER, etc.) ───────────────────────
-function renderRequests(){ return `<div class="inner"><h1 class="page-title">Food Requests</h1></div>`; }
-
-function renderDonate(){ 
-  return`
-  <div class="inner"><h1 class="page-title">Donate</h1>
-  <div style="max-width:560px;margin:0 auto;">
-    <div class="tabs" id="donateTabs">
-      <button class="tab active" onclick="swTab('donateTabs','donateContent',0)">💵 Money</button>
-      <button class="tab" onclick="swTab('donateTabs','donateContent',1)">📦 Goods</button>
-      <button class="tab" onclick="swTab('donateTabs','donateContent',2)">📋 History</button>
-    </div>
-    <div id="donateContent">
-      <div id="dtab0">
-        <div class="g3" style="margin-bottom:12px;">
-          <div class="card" style="text-align:center;"><div style="font-weight:700;color:#1a4a2e;font-size:13px;">ABSA Bank</div><div style="font-size:12px;color:#555;margin-top:4px;">Acc: 1234567<br>Ref: DONATE</div></div>
-          <div class="card" style="text-align:center;"><div style="font-weight:700;color:#1a4a2e;font-size:13px;">PayPal</div><div style="font-size:12px;color:#555;margin-top:4px;">mealbridge@info.org</div></div>
-          <div class="card" style="text-align:center;"><div style="font-weight:700;color:#1a4a2e;font-size:13px;">FNB EFT</div><div style="font-size:12px;color:#555;margin-top:4px;">Acc: 9876543<br>Branch: 250655</div></div>
-        </div>
-        <div class="card">
-          <div style="font-weight:700;font-size:13px;margin-bottom:10px;">Quick Donate</div>
-          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-            ${[50,100,250,500].map(a=>`<button onclick="pickAmt(${a},this)" style="flex:1;min-width:50px;padding:8px;border:1.5px solid #1a4a2e;border-radius:7px;background:${a===selectedAmt?'#1a4a2e':'none'};color:${a===selectedAmt?'#fff':'#1a4a2e'};font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;cursor:pointer;" id="ab${a}">R${a}</button>`).join('')}
-          </div>
-          <input class="inp" id="customAmt" placeholder="Custom amount (R)" type="number" min="1"/>
-          <input class="inp" id="donorName" placeholder="Your name (optional)" value="${activeUser?.name||''}"/>
-          <button class="btn" onclick="submitMoney()">DONATE NOW 💚</button>
-          <div class="toast" id="dToast">Thank you! Donation recorded. 🌟</div>
-        </div>
-      </div>
-      <div id="dtab1" style="display:none;">
-        <div class="card">
-          <div style="font-weight:700;font-size:13px;margin-bottom:10px;">Goods Donation</div>
-          <input class="inp" id="gName" placeholder="Your Full Name" value="${activeUser?.name||''}"/>
-          <input class="inp" id="gPhone" placeholder="Phone Number"/>
-          <input class="inp" id="gGoods" placeholder="What are you donating? (e.g. 20kg rice)"/>
-          <input class="inp" id="gAddress" placeholder="Your address (we can arrange pickup)"/>
-          <div style="background:#f0f7f1;border-radius:9px;padding:10px;margin-bottom:9px;"><div style="font-size:12px;color:#555;margin-bottom:5px;">Upload proof of goods:</div><input type="file" id="gProof" accept="image/*,.pdf" style="font-size:12px;width:100%;"/></div>
-          <button class="btn" onclick="submitGoods()">SUBMIT GOODS DONATION</button>
-          <div class="toast" id="gToast">Thank you! Admin will contact you. 📦</div>
-          <div class="err" id="gErr"></div>
-        </div>
-      </div>
-      <div id="dtab2" style="display:none;"><div style="font-size:11px;font-weight:700;color:#555;letter-spacing:.5px;margin-bottom:8px;">DONATION HISTORY</div>${donations.map(d=>`<div class="row"><div><div style="font-weight:700;font-size:13px;">${d.name} — ${d.type}</div><div style="font-size:12px;color:#555;">${d.amount} · ${d.date}</div></div>${sbadge(d.status)}</div>`).join('')}</div>
-    </div>
-  </div></div>`;
-}
-
-function renderVolunteer(){ return `<div class="inner"><h1 class="page-title">Volunteer</h1></div>`; }
-function renderGallery(){ return `<div class="inner"><h1 class="page-title">Gallery</h1></div>`; }
-function renderBlog(){ return `<div class="inner"><h1 class="page-title">Blog</h1></div>`; }
-function renderSchedule(){ return `<div class="inner"><h1 class="page-title">Schedule</h1></div>`; }
-function renderContact(){ return `<div class="inner"><h1 class="page-title">Contact</h1></div>`; }
-function renderAdmin(){ return `<div class="inner"><h1 class="page-title">Admin</h1></div>`; }
-
-// ── HELPERS ────────────────────────────────────────────────────────────────
-function pickAmt(a,btn){ selectedAmt=a;document.querySelectorAll('[id^="ab"]').forEach(b=>{b.style.background='none';b.style.color='#1a4a2e';});btn.style.background='#1a4a2e';btn.style.color='#fff'; }
-function submitMoney(){ const custom=document.getElementById('customAmt').value;const name=document.getElementById('donorName').value.trim()||'Anon';const amt='R'+(custom||selectedAmt);donations.unshift({id:nid(),name,type:'Money',amount:amt,date:'26 May 2026',status:'Confirmed'});notify(`Donation of ${amt} from ${name}`);showToast('dToast'); }
-function submitGoods(){ const name=document.getElementById('gName').value.trim();const goods=document.getElementById('gGoods').value.trim();if(!name||!goods){document.getElementById('gErr').textContent='Please fill in name and goods.';return;}document.getElementById('gErr').textContent='';donations.unshift({id:nid(),name,type:'Goods',amount:goods,date:'26 May 2026',status:'Pending Pickup'});notify(`Goods donation from ${name}: ${goods}`);showToast('gToast'); }
-function swTab(barId,contentId,idx){ document.getElementById(barId).querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===idx)); const pfx=contentId==='donateContent'?'dtab':contentId==='adminContent'?'atab':'ltab'; document.getElementById(contentId).querySelectorAll('[id^="'+pfx+'"]').forEach((el,i)=>el.style.display=i===idx?'block':'none'); }
+// ... (Keep the rest of your functions: renderLogin, renderDonate, etc.)
 
 // ── BOOT ──────────────────────────────────────────────────────────────────
 renderPage();
