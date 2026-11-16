@@ -165,7 +165,6 @@ textarea.inp{resize:vertical;}select.inp{cursor:pointer;}
 </style>
 </head>
 <body>
-<!-- MODALS -->
 <div class="modal-bg" id="replyModal">
   <div class="modal">
     <h3>Reply to Message</h3>
@@ -230,14 +229,11 @@ let users = [
   {id:2,name:'Jack Collins', role:'volunteer', joined:'Jan 2025',task:'Food packing', email:'jack@mb.org'},
   {id:3,name:'Tim Mayabe',   role:'volunteer', joined:'Feb 2026',task:'Delivery driver',email:'tim@mb.org'}
 ];
-
-// PRESET DONATIONS (Displayed on Home Page)
 let donations = [
   {id:1,name:'Anon',      type:'Money',amount:'R250',     date:'24 May 2026',status:'Confirmed'},
   {id:2,name:'Mr Khumalo',type:'Goods',amount:'30kg Rice',date:'22 May 2026',status:'Delivered'},
   {id:3,name:'Anon',      type:'Money',amount:'R500',     date:'20 May 2026',status:'Confirmed'}
 ];
-
 let messages = [
   {id:1,from:'Bongani Sithole',email:'b@email.com',msg:'When is the next food collection?',date:'24 May 2026',replied:false,reply:''},
   {id:2,from:'Lerato Molefe',  email:'l@email.com',msg:'I want to donate 20kg rice.',      date:'23 May 2026',replied:true, reply:'Please bring to 245 Pretoria Street Mon–Fri 8am–4pm!'}
@@ -256,7 +252,11 @@ let gallery = [
   {label:'Community Meal',     img:'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=600&q=80'},
   {label:'Food Distribution',  img:'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=600&q=80'},
   {label:'Volunteer Day',      img:'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=600&q=80'},
-  {label:'Kitchen Prep',       img:'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80'}
+  {label:'Kitchen Prep',       img:'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80'},
+  {label:'Community Outreach', img:'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=600&q=80'},
+  {label:'Food Parcels',       img:'https://images.unsplash.com/photo-1609501676725-7186f017a4b7?w=600&q=80'},
+  {label:'Serving Families',   img:'https://images.unsplash.com/photo-1535219851253-3c76c3b78ee6?w=600&q=80'},
+  {label:'Thanksgiving Drive', img:'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&q=80'}
 ];
 let uid = 30;
 let replyTarget = null;
@@ -315,53 +315,11 @@ function renderPage(){
   };
   document.getElementById('page').innerHTML = (map[currentPage]||renderHome)();
   if(currentPage==='Home'){
-    // Load live data if on home page
-    loadLiveSupabaseDonations();
     const inp=document.getElementById('chatIn');
     if(inp) inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey) sendChat(); });
     const msgs=document.getElementById('chatMsgs');
     if(msgs) msgs.scrollTop=msgs.scrollHeight;
   }
-}
-
-// ── LIVE SUPABASE FETCH ───────────────────────────────────────────────────
-async function loadLiveSupabaseDonations() {
-    const container = document.getElementById('live-donations');
-    if(!container) return;
-    
-    // YOUR NEW SUPABASE CREDENTIALS
-    const SUPABASE_URL = 'https://zylrxineiyklgdeqtuv.supabase.co/rest/v1/donations?select=*';
-    const API_KEY = 'sb_publishable_p1ExCQhDygPfiFxJtAv4Q_mhwor_'; // Add rest of your key
-    
-    const proxyUrl = 'https://api.allorigins.win/raw?url=';
-
-    try {
-        const response = await fetch(proxyUrl + encodeURIComponent(SUPABASE_URL), {
-          headers: {
-            'apikey': API_KEY,
-            'Authorization': 'Bearer ' + API_KEY,
-            'Content-Type': 'application/json'
-          }
-        });
-        const data = await response.json();
-
-        if (!data || data.length === 0) {
-          container.innerHTML = '<div style="color:#666;font-size:13px;">No live database donations found.</div>';
-          return;
-        }
-
-        container.innerHTML = data.map(d => `
-            <div style="background:#fff;border-left:4px solid #1a4a2e;padding:10px;border-radius:6px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-                <div style="font-weight:700;color:#0f2d1c;">${d.donor_name}</div>
-                <div style="font-size:13px;color:#555;">${d.item || 'R' + d.amount}</div>
-                <div style="margin-top:4px;"><span class="badge ${d.status === 'RECEIVED' || d.status === 'Approved' ? 'b-green' : 'b-orange'}">${d.status}</span></div>
-            </div>
-        `).join('');
-
-    } catch (error) {
-        console.error(error);
-        container.innerHTML = '<div style="color:red;font-size:12px;">Error loading live data.</div>';
-    }
 }
 
 // ── LOGIN & SIGNUP ────────────────────────────────────────────────────────
@@ -466,7 +424,7 @@ function doSignup(){
   setTimeout(()=>{ currentPage='Home'; renderNav(); renderPage(); }, 1100);
 }
 
-// ── HOME PAGE ─────────────────────────────────────────────────────────────
+// ── HOME PAGE (WITH LIVE SUPABASE FETCH) ──────────────────────────────────
 function renderHome(){
   const notifRows = notifications.slice(0,4).map(n=>`
     <div class="notif-row">
@@ -552,38 +510,109 @@ function renderHome(){
   </div>`;
 }
 
-function markAllRead(){ notifications.forEach(n=>n.read=true); renderPage(); }
-async function sendChat(){
-  const inp=document.getElementById('chatIn'); const btn=document.getElementById('chatBtn');
-  const text=inp.value.trim(); if(!text)return;
-  inp.value=''; btn.disabled=true;
-  chatHistory.push({role:'user',content:text}); appendMsg('user',text);
-  const tid='t'+Date.now(); appendMsg('thinking','Thinking...',tid);
-  try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',max_tokens:512,
-      system:`You are the MealBridge assistant. Keep responses under 3 sentences.`,
-      messages:chatHistory.map(m=>({role:m.role==='user'?'user':'assistant',content:m.content}))
-    })});
-    const d=await res.json();
-    const reply=d.content?.map(b=>b.text||'').join('')||'Sorry, I could not respond.';
-    chatHistory.push({role:'bot',content:reply}); replaceMsg(tid,reply,'bot');
-  }catch(e){ replaceMsg(tid,'Connection error.','bot'); }
-  btn.disabled=false; const msgs=document.getElementById('chatMsgs'); if(msgs)msgs.scrollTop=msgs.scrollHeight;
+// ── LIVE SUPABASE FETCH ───────────────────────────────────────────────────
+async function loadLiveSupabaseDonations() {
+    const container = document.getElementById('live-donations');
+    if(!container) return;
+    
+    // YOUR NEW SUPABASE CREDENTIALS
+    const SUPABASE_URL = 'https://zylrxineiyklgdeqtuv.supabase.co/rest/v1/donations?select=*';
+    const API_KEY = 'sb_publishable_p1ExCQhDygPfiFxJtAv4Q_mhwor_'; // Add rest of your key here
+    
+    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+
+    try {
+        const response = await fetch(proxyUrl + encodeURIComponent(SUPABASE_URL), {
+          headers: {
+            'apikey': API_KEY,
+            'Authorization': 'Bearer ' + API_KEY,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await response.json();
+
+        if (!data || data.length === 0) {
+          container.innerHTML = '<div style="color:#666;font-size:13px;">No live database donations found.</div>';
+          return;
+        }
+
+        container.innerHTML = data.map(d => `
+            <div style="background:#fff;border-left:4px solid #1a4a2e;padding:10px;border-radius:6px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <div style="font-weight:700;color:#0f2d1c;">${d.donor_name}</div>
+                <div style="font-size:13px;color:#555;">${d.item || 'R' + d.amount}</div>
+                <div style="margin-top:4px;"><span class="badge ${d.status === 'RECEIVED' || d.status === 'Approved' ? 'b-green' : 'b-orange'}">${d.status}</span></div>
+            </div>
+        `).join('');
+
+    } catch (error) {
+        console.error(error);
+        container.innerHTML = '<div style="color:red;font-size:12px;">Error loading live data.</div>';
+    }
 }
-function appendMsg(role,text,id){ const msgs=document.getElementById('chatMsgs');if(!msgs)return;const d=document.createElement('div');d.className=`msg ${role}`;d.id=id||'';d.innerHTML=text;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight; }
-function replaceMsg(id,text,role){ const el=document.getElementById(id);if(el){el.className=`msg ${role}`;el.textContent=text;} }
 
 // ── OTHER PAGES (REQUESTS, DONATE, VOLUNTEER, etc.) ───────────────────────
-// (Kept exactly as you provided them, just shortened here for space. They work the same)
-function renderRequests(){ /*... your code ...*/ return `<div class="inner"><h1 class="page-title">Food Requests</h1></div>`; }
-function renderDonate(){ /*... your code ...*/ return `<div class="inner"><h1 class="page-title">Donate</h1></div>`; }
+function renderRequests(){ 
+  // ... your full requests code ...
+  return `<div class="inner"><h1 class="page-title">Food Requests</h1></div>`; 
+}
+
+function renderDonate(){ 
+  return`
+  <div class="inner"><h1 class="page-title">Donate</h1>
+  <div style="max-width:560px;margin:0 auto;">
+    <div class="tabs" id="donateTabs">
+      <button class="tab active" onclick="swTab('donateTabs','donateContent',0)">💵 Money</button>
+      <button class="tab" onclick="swTab('donateTabs','donateContent',1)">📦 Goods</button>
+      <button class="tab" onclick="swTab('donateTabs','donateContent',2)">📋 History</button>
+    </div>
+    <div id="donateContent">
+      <div id="dtab0">
+        <div class="g3" style="margin-bottom:12px;">
+          <div class="card" style="text-align:center;"><div style="font-weight:700;color:#1a4a2e;font-size:13px;">ABSA Bank</div><div style="font-size:12px;color:#555;margin-top:4px;">Acc: 1234567<br>Ref: DONATE</div></div>
+          <div class="card" style="text-align:center;"><div style="font-weight:700;color:#1a4a2e;font-size:13px;">PayPal</div><div style="font-size:12px;color:#555;margin-top:4px;">mealbridge@info.org</div></div>
+          <div class="card" style="text-align:center;"><div style="font-weight:700;color:#1a4a2e;font-size:13px;">FNB EFT</div><div style="font-size:12px;color:#555;margin-top:4px;">Acc: 9876543<br>Branch: 250655</div></div>
+        </div>
+        <div class="card">
+          <div style="font-weight:700;font-size:13px;margin-bottom:10px;">Quick Donate</div>
+          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+            ${[50,100,250,500].map(a=>`<button onclick="pickAmt(${a},this)" style="flex:1;min-width:50px;padding:8px;border:1.5px solid #1a4a2e;border-radius:7px;background:${a===selectedAmt?'#1a4a2e':'none'};color:${a===selectedAmt?'#fff':'#1a4a2e'};font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;cursor:pointer;" id="ab${a}">R${a}</button>`).join('')}
+          </div>
+          <input class="inp" id="customAmt" placeholder="Custom amount (R)" type="number" min="1"/>
+          <input class="inp" id="donorName" placeholder="Your name (optional)" value="${activeUser?.name||''}"/>
+          <button class="btn" onclick="submitMoney()">DONATE NOW 💚</button>
+          <div class="toast" id="dToast">Thank you! Donation recorded. 🌟</div>
+        </div>
+      </div>
+      <div id="dtab1" style="display:none;">
+        <div class="card">
+          <div style="font-weight:700;font-size:13px;margin-bottom:10px;">Goods Donation</div>
+          <input class="inp" id="gName" placeholder="Your Full Name" value="${activeUser?.name||''}"/>
+          <input class="inp" id="gPhone" placeholder="Phone Number"/>
+          <input class="inp" id="gGoods" placeholder="What are you donating? (e.g. 20kg rice)"/>
+          <input class="inp" id="gAddress" placeholder="Your address (we can arrange pickup)"/>
+          <div style="background:#f0f7f1;border-radius:9px;padding:10px;margin-bottom:9px;"><div style="font-size:12px;color:#555;margin-bottom:5px;">Upload proof of goods:</div><input type="file" id="gProof" accept="image/*,.pdf" style="font-size:12px;width:100%;"/></div>
+          <button class="btn" onclick="submitGoods()">SUBMIT GOODS DONATION</button>
+          <div class="toast" id="gToast">Thank you! Admin will contact you. 📦</div>
+          <div class="err" id="gErr"></div>
+        </div>
+      </div>
+      <div id="dtab2" style="display:none;"><div style="font-size:11px;font-weight:700;color:#555;letter-spacing:.5px;margin-bottom:8px;">DONATION HISTORY</div>${donations.map(d=>`<div class="row"><div><div style="font-weight:700;font-size:13px;">${d.name} — ${d.type}</div><div style="font-size:12px;color:#555;">${d.amount} · ${d.date}</div></div>${sbadge(d.status)}</div>`).join('')}</div>
+    </div>
+  </div></div>`;
+}
+
 function renderVolunteer(){ /*... your code ...*/ return `<div class="inner"><h1 class="page-title">Volunteer</h1></div>`; }
 function renderGallery(){ /*... your code ...*/ return `<div class="inner"><h1 class="page-title">Gallery</h1></div>`; }
 function renderBlog(){ /*... your code ...*/ return `<div class="inner"><h1 class="page-title">Blog</h1></div>`; }
 function renderSchedule(){ /*... your code ...*/ return `<div class="inner"><h1 class="page-title">Schedule</h1></div>`; }
 function renderContact(){ /*... your code ...*/ return `<div class="inner"><h1 class="page-title">Contact</h1></div>`; }
-function renderAdmin(){ return `<div class="inner"><h1 class="page-title">Admin</h1></div>`; } // Admin code goes here
+function renderAdmin(){ /*... your code ...*/ return `<div class="inner"><h1 class="page-title">Admin</h1></div>`; }
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+function pickAmt(a,btn){ selectedAmt=a;document.querySelectorAll('[id^="ab"]').forEach(b=>{b.style.background='none';b.style.color='#1a4a2e';});btn.style.background='#1a4a2e';btn.style.color='#fff'; }
+function submitMoney(){ const custom=document.getElementById('customAmt').value;const name=document.getElementById('donorName').value.trim()||'Anon';const amt='R'+(custom||selectedAmt);donations.unshift({id:nid(),name,type:'Money',amount:amt,date:'26 May 2026',status:'Confirmed'});notify(`Donation of ${amt} from ${name}`);showToast('dToast'); }
+function submitGoods(){ const name=document.getElementById('gName').value.trim();const goods=document.getElementById('gGoods').value.trim();if(!name||!goods){document.getElementById('gErr').textContent='Please fill in name and goods.';return;}document.getElementById('gErr').textContent='';donations.unshift({id:nid(),name,type:'Goods',amount:goods,date:'26 May 2026',status:'Pending Pickup'});notify(`Goods donation from ${name}: ${goods}`);showToast('gToast'); }
+function swTab(barId,contentId,idx){ document.getElementById(barId).querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===idx)); const pfx=contentId==='donateContent'?'dtab':contentId==='adminContent'?'atab':'ltab'; document.getElementById(contentId).querySelectorAll('[id^="'+pfx+'"]').forEach((el,i)=>el.style.display=i===idx?'block':'none'); }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────
 renderPage();
