@@ -314,12 +314,54 @@ function renderPage(){
     Admin:    renderAdmin,
   };
   document.getElementById('page').innerHTML = (map[currentPage]||renderHome)();
+  
   if(currentPage==='Home'){
+    loadLiveSupabaseDonations();
     const inp=document.getElementById('chatIn');
     if(inp) inp.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey) sendChat(); });
     const msgs=document.getElementById('chatMsgs');
     if(msgs) msgs.scrollTop=msgs.scrollHeight;
   }
+}
+
+// ── LIVE SUPABASE FETCH ───────────────────────────────────────────────────
+async function loadLiveSupabaseDonations() {
+    const container = document.getElementById('live-donations');
+    if(!container) return;
+    
+    // YOUR NEW SUPABASE CREDENTIALS
+    const SUPABASE_URL = 'https://zylrxineiyklgdeqtuv.supabase.co/rest/v1/donations?select=*';
+    const API_KEY = 'sb_publishable_p1ExCQhDygPfiFxJtAv4Q_mhwor_'; // Add rest of your key here
+    
+    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+
+    try {
+        const response = await fetch(proxyUrl + encodeURIComponent(SUPABASE_URL), {
+          headers: {
+            'apikey': API_KEY,
+            'Authorization': 'Bearer ' + API_KEY,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await response.json();
+
+        if (!data || data.length === 0) {
+          container.innerHTML = '<div style="color:#666;font-size:13px;">No live database donations found.</div>';
+          return;
+        }
+
+        container.innerHTML = data.map(d => `
+            <div style="background:#fff;border-left:4px solid #1a4a2e;padding:12px;border-radius:8px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <div style="font-weight:700;color:#0f2d1c;">${d.donor_name}</div>
+                <div style="font-size:13px;color:#555;">${d.item || 'R' + d.amount}</div>
+                <div style="margin-top:6px;"><span class="badge ${d.status === 'RECEIVED' || d.status === 'Approved' ? 'b-green' : 'b-orange'}">${d.status}</span></div>
+            </div>
+        `).join('');
+
+    } catch (error) {
+        console.error(error);
+        container.innerHTML = '<div style="color:red;font-size:12px;">Error loading live data.</div>';
+    }
 }
 
 // ── LOGIN & SIGNUP ────────────────────────────────────────────────────────
@@ -551,10 +593,7 @@ async function loadLiveSupabaseDonations() {
 }
 
 // ── OTHER PAGES (REQUESTS, DONATE, VOLUNTEER, etc.) ───────────────────────
-function renderRequests(){ 
-  // ... your full requests code ...
-  return `<div class="inner"><h1 class="page-title">Food Requests</h1></div>`; 
-}
+function renderRequests(){ return `<div class="inner"><h1 class="page-title">Food Requests</h1></div>`; }
 
 function renderDonate(){ 
   return`
@@ -601,12 +640,12 @@ function renderDonate(){
   </div></div>`;
 }
 
-function renderVolunteer(){ /*... your code ...*/ return `<div class="inner"><h1 class="page-title">Volunteer</h1></div>`; }
-function renderGallery(){ /*... your code ...*/ return `<div class="inner"><h1 class="page-title">Gallery</h1></div>`; }
-function renderBlog(){ /*... your code ...*/ return `<div class="inner"><h1 class="page-title">Blog</h1></div>`; }
-function renderSchedule(){ /*... your code ...*/ return `<div class="inner"><h1 class="page-title">Schedule</h1></div>`; }
-function renderContact(){ /*... your code ...*/ return `<div class="inner"><h1 class="page-title">Contact</h1></div>`; }
-function renderAdmin(){ /*... your code ...*/ return `<div class="inner"><h1 class="page-title">Admin</h1></div>`; }
+function renderVolunteer(){ return `<div class="inner"><h1 class="page-title">Volunteer</h1></div>`; }
+function renderGallery(){ return `<div class="inner"><h1 class="page-title">Gallery</h1></div>`; }
+function renderBlog(){ return `<div class="inner"><h1 class="page-title">Blog</h1></div>`; }
+function renderSchedule(){ return `<div class="inner"><h1 class="page-title">Schedule</h1></div>`; }
+function renderContact(){ return `<div class="inner"><h1 class="page-title">Contact</h1></div>`; }
+function renderAdmin(){ return `<div class="inner"><h1 class="page-title">Admin</h1></div>`; }
 
 // ── HELPERS ────────────────────────────────────────────────────────────────
 function pickAmt(a,btn){ selectedAmt=a;document.querySelectorAll('[id^="ab"]').forEach(b=>{b.style.background='none';b.style.color='#1a4a2e';});btn.style.background='#1a4a2e';btn.style.color='#fff'; }
